@@ -1,7 +1,6 @@
 const { Schema, model, Types } = require("mongoose");
-
+// separated out the reaction subdocument of thoughts. Could have put it inside the Thought.js file but this is more modular.
 const reactionSchema = new Schema(
-
   {
     reactionId: {
       type: Schema.Types.ObjectId,
@@ -36,7 +35,7 @@ const reactionSchema = new Schema(
 );
 
 // calling this function from createdAt inside this model Thought. Passing in the timestamp to convert it to standard JS Date type.
-function formatDate(createdAt) {
+function formatDate(timestamp) {
   var date = new Date(timestamp);
   return date;
 }

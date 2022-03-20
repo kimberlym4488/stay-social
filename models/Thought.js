@@ -47,7 +47,7 @@ thoughtSchema
   });
 
 // calling this getter function from createdAt inside this model Thought. Passing in the timestamp to convert it to standard JS Date type.
-function formatDate(createdAt) {
+function formatDate(timestamp) {
   var date = new Date(timestamp);
   console.log(date.getTime());
   return date;
