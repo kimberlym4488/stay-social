@@ -1,4 +1,4 @@
-// two separate schemas to help us build reactions into thoughts.
+// two separate schemas to help us build reactions into thoughts. I've split Reactions off from this into it's own schema and imported it here on line 3.
 const { Schema, model, Types } = require("mongoose");
 const reactionSchema = require("./Reaction");
 
@@ -13,9 +13,8 @@ const thoughtSchema = new Schema(
     // need to add in a getter method to format the timestamp on query.
     createdAt: {
       type: Date,
-      default: timestamp.now,
-      get: formatDate,
-      //   or try this - currentTime: () => (Date | number)
+      default: Date.now,
+      get: timestamp => formatDate(timestamp),
     },
     // do I want username referencing the User.js model or just a string?
     username: [

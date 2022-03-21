@@ -1,6 +1,5 @@
 const { Schema, model, Types } = require("mongoose");
 
-
 // Schema to create User model
 const userSchema = new Schema(
   {
@@ -16,7 +15,6 @@ const userSchema = new Schema(
       type: String,
       required: "E-mail address is required",
       unique: true,
-      validate: [validateEmail, "Please fill a valid email address"],
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,10})+$/,
         "Please enter a valid email address",
@@ -32,12 +30,12 @@ const userSchema = new Schema(
 
     //  Array of _id values referencing the User model (self-reference)
     friends: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
-        },
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
     ],
-},
+  },
   {
     toJSON: {
       getters: true,
@@ -54,7 +52,6 @@ userSchema
     return friends.length();
   });
 
-
 const User = model("user", userSchema);
 
-module.exports = Student;
+module.exports = User;
