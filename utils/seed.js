@@ -1,7 +1,7 @@
 const connection = require("../config/connection");
 const { User, Thought } = require("../models");
 // const { getMaxListeners } = require("../models/Reaction");
-const { getRandomName, getRandomThoughts } = require("./data");
+const { getRandomName, getRandomThoughts, getFriend } = require("./data");
 
 connection.on("error", (err) => err);
 
@@ -18,21 +18,37 @@ connection.once("open", async () => {
   const users = [];
 
   // Get some random thought objects using a helper function that we imported from ./data
-  const thoughts = getRandomThoughts(20);
+  const thoughts = getRandomThoughts(3);
 
-  // Loop 20 times -- add users to the users array
-  for (let i = 0; i < 20; i++) {
-    const username = getRandomName();
+  const usernames = [
+    "Aaran",
+    "Aarez",
+    "Aarman",
+    "Aaron",
+    "Gillian",
+    "Clark",
+    "Jared",
+    "Grace",
+    "Kelsey",
+    "Tamar",
+  ];
+  // Loop 5 times -- add users to the users array
+  for (let i = 0; i < usernames.length; i++) {
+    const username = usernames[i];
     console.log(username);
     const email = `${username}.${Math.floor(
       Math.random() * (99 - 18 + 1) + 18
     )}@gmail.com`;
     console.log(email);
 
+    const friend = getFriend(2);
+    console.log(friend);
     users.push({
       username,
       email,
+      friend,
     });
+    console.log(users[i]);
   }
 
   // Add users to the collection and await the results

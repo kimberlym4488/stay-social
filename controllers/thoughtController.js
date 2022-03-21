@@ -24,8 +24,7 @@ module.exports = {
   async getUsers(req, res) {
     try {
       const users = await User.find();
-      return res.status(200).json(users);
-      console.log(users);
+      return res.status(200).json({ users });
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
@@ -36,15 +35,12 @@ module.exports = {
 
   async getSingleUser(req, res) {
     try {
-      const user = await User.findOne({ _id: req.params.userId })
-        .populate([
-          { path: "thought", select: "-__v" },
-          { path: "friend", select: "-__v" },
-        ])
-        .select("-__v");
+      const user = await User.findOne({ _id: req.params.userId }).select(
+        "-__v"
+      );
+
       if (!user) {
         res.status(404).json({ message: "No user with that ID" });
-        return;
       } else {
         res.json({
           user,
@@ -71,25 +67,25 @@ module.exports = {
   async deleteUser(req, res) {
     // Delete user from DB
     try {
-      const user = await User.findOneAndRemove({ _id: req.params.userId });
-      // Now we need to remove them from any other connections, mongoDB does not cascade/auto delete like mySQL. We can use a conditional ternary operator, same as an if else statement. If no user, respond with no user, else find one thought and pull that user id from it.
-      if (!user) {
-        res.status(404).json({ message: "No such user exists" });
-      } else {
-        // delete user from friends array.s
-        User.updateMany(
-          { _id: { $in: user.friend } },
-          { $pull: { friend: req.params.userId } },
-          { new: true }
+      const user = await User.findOneAndRemove({ _id: req.params.userId })(
+        // Now we need to remove them from any other connections, mongoDB does not cascade/auto delete like mySQL. We can use a conditional ternary operator, same as an if else statement. If no user, respond with no user, else find one thought and pull that user id from it.
+        !user
+          ? res.status(404).json({ message: "No such user exists" })
+          : Thought.findOneAndUpdate(
+              // check lingo, may need to be 'user' or uppercase 'User'
+              { users: req.params.userId },
+              { $pull: { users: req.params.userId } },
+              { new: true }
+            )
+      )
+        // may have to use if else here. Will test.
+        .then((thought) =>
+          !thought
+            ? res.status(404).json({
+                message: "User deleted, but no thoughts found",
+              })
+            : res.json({ message: "User and thourhgts successfully deleted" })
         );
-        // now lets try and remove thoughts from deleted user.
-
-        Thought.deleteMany({
-          username: user.username,
-        });
-
-        res.json({ message: "User and thoughts and friends deleted!" });
-      }
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
@@ -120,52 +116,40 @@ module.exports = {
       res.status(500).json(err);
     }
   },
-  // Add a friend to a user.
-  // Probably wrong, let's troublshoot
-  async addFriend(req, res) {
-    try {
-      console.log("You are adding a friend");
-      console.log(req.body, req.params.userId);
-      const newFriend = await User.findOneAndUpdate(
-        { _id: req.params.userId },
-        { $addToSet: { friendId: req.params.friendId } },
-        { runValidators: true, new: true }
-      );
-
-      if (!newFriend) {
-        res
-          .status(404)
-          .json({ message: "No friend or user found with that ID :(" });
-      }
-      res.json(newFriend);
-    } catch (err) {
-      console.log(err);
-      res.status(500).json(err);
-    }
-  },
-
-  // Remove friend from a user
-  async deleteFriend(req, res) {
-    try {
-      console.log("You are deleting a friend");
-      console.log(req.body, req.params.userId);
-
-      const deleteFriend = await User.findOneAndUpdate(
-        { _id: req.params.userId },
-        { $pull: { friend: { friendId: req.params.friendId } } },
-        { runValidators: true, new: true }
-      );
-
-      if (!deleteFriend) {
-        res
-          .status(404)
-          .json({ message: "No friend or user found with that ID :(" });
-      }
-
-      res.json(deleteFriend);
-    } catch (err) {
-      console.log(err);
-      res.status(500).json(err);
-    }
-  },
 };
+
+// // Add an assignment to a student - Example from class project if I need it for other routes.
+
+// addAssignment(req, res) {
+//   console.log("You are adding an assignment");
+//   console.log(req.body);
+//   Student.findOneAndUpdate(
+//     { _id: req.params.studentId },
+//     { $addToSet: { assignments: req.body } },
+//     { runValidators: true, new: true }
+//   )
+//     .then((student) =>
+//       !student
+//         ? res
+//             .status(404)
+//             .json({ message: "No student found with that ID :(" })
+//         : res.json(student)
+//     )
+//     .catch((err) => res.status(500).json(err));
+// },
+// // Remove assignment from a student
+// removeAssignment(req, res) {
+//   Student.findOneAndUpdate(
+//     { _id: req.params.studentId },
+//     { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
+//     { runValidators: true, new: true }
+//   )
+//     .then((student) =>
+//       !student
+//         ? res
+//             .status(404)
+//             .json({ message: "No student found with that ID :(" })
+//         : res.json(student)
+//     )
+//     .catch((err) => res.status(500).json(err));
+// },
