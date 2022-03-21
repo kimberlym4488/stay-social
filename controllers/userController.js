@@ -20,7 +20,6 @@ const { User, Thought } = require("../models");
 module.exports = {
   // Get all users
   // referenced in class code for sending data back in res.
-
   async getUsers(req, res) {
     try {
       const users = await User.find();
@@ -37,10 +36,10 @@ module.exports = {
   async getSingleUser(req, res) {
     try {
       const user = await User.findOne({ _id: req.params.userId })
-        .populate([
-          { path: "thought", select: "-__v" },
-          { path: "friend", select: "-__v" },
-        ])
+        // .populate([
+        //   { path: "thought", select: "-__v" },
+        //   { path: "friends", select: "-__v" },
+        // ])
         .select("-__v");
       if (!user) {
         res.status(404).json({ message: "No user with that ID" });

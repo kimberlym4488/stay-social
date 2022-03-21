@@ -10,20 +10,18 @@ const thoughtSchema = new Schema(
       maxlength: 280,
       minlength: 1,
     },
-    // need to add in a getter method to format the timestamp on query.
+      // do I want username referencing the User.js model or just a string?
+      username: {
+        type: String,
+        required: true,
+      },
+  
     createdAt: {
       type: Date,
       default: Date.now,
-      get: timestamp => formatDate(timestamp),
+      get: (timestamp) => formatDate(timestamp),
     },
-    // do I want username referencing the User.js model or just a string?
-    username: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-
+  
     reactions: [reactionSchema],
   },
 

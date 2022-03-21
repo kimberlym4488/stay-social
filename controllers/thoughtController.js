@@ -1,106 +1,101 @@
-const { User, Thought } = require("../models");
-
-// Aggregate function to get the number of students overall
-// const headCount = async () =>
-//   Student.aggregate()
-//     .count('studentCount')
-//     .then((numberOfStudents) => numberOfStudents);
-
-// // Aggregate function for getting the overall grade using $avg
-// const grade = async (studentId) =>
-//   Student.aggregate([
-//     {
-//       $unwind: '$assignments',
-//     },
-//     {
-//       $group: { _id: studentId, overallGrade: { $avg: '$assignments.score' } },
-//     },
-//   ]);
+const { Thought, User } = require("../models");
 
 module.exports = {
-  // Get all users
-  // referenced in class code for sending data back in res.
-
-  async getUsers(req, res) {
+  // Get all thoughts
+  async getThoughts(req, res) {
+    console.log("You've reached the getThoughts");
     try {
-      const users = await User.find();
-      return res.status(200).json({ users });
+      const thoughts = await Thought.find();
+      console.log(thoughts);
+      return res.status(200).json(thoughts);
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
     }
   },
-  // Get a single user
-  // referenced in class code for sending data back in res.
 
-  async getSingleUser(req, res) {
+  // Get a single thought
+  async getSingleThought(req, res) {
     try {
-      const user = await User.findOne({ _id: req.params.userId }).select(
-        "-__v"
-      );
+      const thought = await Thought.findOne({
+        _id: req.params.thoughtId,
+      }).select("-__v");
+      console.log(req.params.thoughtId);
 
-      if (!user) {
-        res.status(404).json({ message: "No user with that ID" });
+      if (!thought) {
+        res.status(404).json({ message: "No thought with that ID" });
       } else {
-        res.json({
-          user,
-        });
+        res.json(thought);
       }
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
     }
   },
-  // create a new user
+  // create a new thought, tie it to a user
   // tried the other (project2 way) of changing to json before sending res.
 
-  async createUser(req, res) {
+  async createThought(req, res) {
     try {
-      const user = await User.create(req.body);
-      const newUser = user.toJSON();
-      res.status(200).json(newUser);
+      const thought = await Thought.create({
+        thoughtText: req.body.thoughtText,
+        username: req.body.username,
+        userId: req.body.userId,
+      });
+      console.log(thought);
+      const newThought = thought.toJSON();
+      res.status(200).json(newThought);
     } catch {
       (err) => res.status(500).json(err);
     }
   },
-  // Delete a user and remove their thoughts
-  async deleteUser(req, res) {
+  // Delete a thought and reactions to it.
+  async deleteThought(req, res) {
     // Delete user from DB
     try {
-      const user = await User.findOneAndRemove({ _id: req.params.userId })(
-        // Now we need to remove them from any other connections, mongoDB does not cascade/auto delete like mySQL. We can use a conditional ternary operator, same as an if else statement. If no user, respond with no user, else find one thought and pull that user id from it.
-        !user
-          ? res.status(404).json({ message: "No such user exists" })
-          : Thought.findOneAndUpdate(
-              // check lingo, may need to be 'user' or uppercase 'User'
-              { users: req.params.userId },
-              { $pull: { users: req.params.userId } },
-              { new: true }
-            )
-      )
-        // may have to use if else here. Will test.
-        .then((thought) =>
-          !thought
-            ? res.status(404).json({
-                message: "User deleted, but no thoughts found",
-              })
-            : res.json({ message: "User and thourhgts successfully deleted" })
+      const thought = await Thought.findOneAndRemove({
+        _id: req.params.thoughtId,
+      });
+      // Now we need to remove thought from any other connection, like reactions associated with it. mongoDB does not cascade/auto delete like mySQL. We can use a conditional ternary operator, same as an if else statement. If no thought respond with no thought, else find one thought and pull it.
+      if (!thought) {
+        res
+          .status(404)
+          .json({ message: "Someone already deleted this. Phew!" });
+      } else {
+        // delete reactions to the thought
+        // PROBABLY WRONG
+        Thought.updateMany(
+          { _id: { $in: thought.reaction } },
+          { $pull: { reaction: req.params.thoughtId } },
+          { new: true }
         );
+
+        // now lets try and delete this thought id from the user record.
+        User.deleteOne({
+          thought: req.params.thoughtId,
+        });
+
+        res.json({
+          message:
+            "Thought deleted from user and Reactions to thought deleted.",
+        });
+      }
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
     }
   },
 
-  // Update a user by its _id;
-  async updateUser(req, res) {
+  // Update a thought by its _id;
+  async updateThought(req, res) {
     try {
-      const user = await User.findOneAndUpdate(
-        // find the user by the id passed through in the params.
+      const thought = await Thought.findOneAndUpdate(
+        // find the thought by the id passed through in the params.
         { _id: req.params.userId },
-        // replace username or email in the user schema with the new value from the req.body we are passing in
+        // replace thoughtText in the user schema with the new value from the req.body we are passing in
 
-        [{ username: req.body.username }, { email: req.body.email }],
+        { username: req.body.thoughtText },
+        // new:true -- show the new thoughtText after completion
         { new: true },
         (err, result) => {
           if (result) {
@@ -116,40 +111,58 @@ module.exports = {
       res.status(500).json(err);
     }
   },
+
+  // Add a reaction to a thought
+  // Probably wrong, let's troublshoot
+  // /api/thoughts/:thoughtId/reactions
+  async addReaction(req, res) {
+    try {
+      console.log("You are adding a reaction");
+      console.log(req.body, req.params.thoughtId);
+      // working, provides ReactionBody and thought Id. Don't have reaction Id yet as it is created when the reaction body is added to this Thought.
+      const newReaction = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        // we need to add the subdocument properties of thoughts, reaction. It has a reactionId, reactionBody, username, created at
+        { $addToSet: { reactionBody: req.body } },
+        { runValidators: true, new: true }
+      );
+
+      if (!newReaction) {
+        res
+          .status(404)
+          .json({ message: "My bad... I'm not able to post your reaction :(" });
+      }
+      const reaction = newReaction.toJSON();
+      res.json(reaction);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
+
+  // Remove reaction from a thought
+  async deleteReaction(req, res) {
+    try {
+      console.log("You are deleting a reaction");
+      console.log(req.body, req.params.thoughtId);
+
+      const deleteReaction = await Thought.findOneAndUpdate(
+        { _id: req.params.ThoughtId },
+        // might be wrong, not sure how to pull in the reaction ID here.
+        { $pull: { reactions: { reactionId: req.body.reactions.reactionId } } },
+        { runValidators: true, new: true }
+      );
+
+      if (!deleteReaction) {
+        res
+          .status(404)
+          .json({ message: "We weren't able to delete your reaction :(" });
+      }
+
+      res.json(deleteReaction);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
 };
-
-// // Add an assignment to a student - Example from class project if I need it for other routes.
-
-// addAssignment(req, res) {
-//   console.log("You are adding an assignment");
-//   console.log(req.body);
-//   Student.findOneAndUpdate(
-//     { _id: req.params.studentId },
-//     { $addToSet: { assignments: req.body } },
-//     { runValidators: true, new: true }
-//   )
-//     .then((student) =>
-//       !student
-//         ? res
-//             .status(404)
-//             .json({ message: "No student found with that ID :(" })
-//         : res.json(student)
-//     )
-//     .catch((err) => res.status(500).json(err));
-// },
-// // Remove assignment from a student
-// removeAssignment(req, res) {
-//   Student.findOneAndUpdate(
-//     { _id: req.params.studentId },
-//     { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
-//     { runValidators: true, new: true }
-//   )
-//     .then((student) =>
-//       !student
-//         ? res
-//             .status(404)
-//             .json({ message: "No student found with that ID :(" })
-//         : res.json(student)
-//     )
-//     .catch((err) => res.status(500).json(err));
-// },

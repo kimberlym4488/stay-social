@@ -1,7 +1,12 @@
 const connection = require("../config/connection");
 const { User, Thought } = require("../models");
 // const { getMaxListeners } = require("../models/Reaction");
-const { getRandomName, getRandomThoughts, getFriend } = require("./data");
+const {
+  getRandomName,
+  getRandomThoughts,
+  getFriends,
+  getReactions,
+} = require("./data");
 
 connection.on("error", (err) => err);
 
@@ -14,11 +19,12 @@ connection.once("open", async () => {
   // Drop existing users
   await User.deleteMany({});
 
-  // Create empty array to hold the users
+  // Create empty array to hold the users and the thoughts
   const users = [];
 
-  // Get some random thought objects using a helper function that we imported from ./data
-  const thoughts = getRandomThoughts(3);
+  const thoughts = [];
+
+  const reactions = [];
 
   const usernames = [
     "Aaran",
@@ -33,22 +39,34 @@ connection.once("open", async () => {
     "Tamar",
   ];
   // Loop 5 times -- add users to the users array
+
   for (let i = 0; i < usernames.length; i++) {
     const username = usernames[i];
-    console.log(username);
+
     const email = `${username}.${Math.floor(
       Math.random() * (99 - 18 + 1) + 18
     )}@gmail.com`;
-    console.log(email);
 
-    const friend = getFriend(2);
-    console.log(friend);
+    const friends = getFriends();
+
     users.push({
       username,
       email,
-      friend,
+      friends,
     });
-    console.log(users[i]);
+  }
+
+  // Get some random thought objects using a helper function that we imported from ./data
+  for (let i = 0; i < 10; i++) {
+    const thoughtsText = getRandomThoughts();
+    const username = getRandomName();
+    const reactions = getReactions();
+
+    thoughts.push({
+      thoughtsText,
+      username,
+      reactions,
+    });
   }
 
   // Add users to the collection and await the results

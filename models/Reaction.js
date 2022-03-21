@@ -15,8 +15,8 @@ const reactionSchema = new Schema(
     },
 
     username: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
+      type: String,
+      required: true,
     },
     // need to add in a getter method to format the timestamp on query.
     createdAt: {

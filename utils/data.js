@@ -34,33 +34,38 @@ const thoughtStrings = [
   "Deliveries",
 ];
 
+const reactions = [
+  "I like that",
+  "That really stinks",
+  "What is wrong with people?",
+  "Why would you say that?",
+  "You're my favorite!",
+  "Games are the best",
+  "I love dogs",
+  "Let's agree to disagree",
+  "Social media is not good for humanity",
+];
+
 // Get a random item given an array
 const getRandomArrItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // Gets a random username
-const getRandomName = () => `${getRandomArrItem(names)}`;
-
-// Function to generate random thoughts that we can add to user object.
-const getRandomThoughts = (int) => {
-  const results = [];
-  for (let i = 0; i < int; i++) {
-    results.push({
-      thoughtText: getRandomArrItem(thoughtStrings),
-      username: getRandomArrItem(names),
-    });
-  }
-  return results;
+const getRandomName = () => {
+  return getRandomArrItem(names);
 };
 
-const getFriend = (int) => {
-  const friend = [];
-  for (let i = 0; i < int; i++) {
-    friend.push({
-      username: getRandomArrItem(names),
-    });
-  }
-  return friend;
+// Function to generate random thoughts that we can add to user object.
+const getRandomThoughts = () => {
+  return getRandomArrItem(thoughtStrings);
+};
+
+const getFriends = () => {
+  return getRandomArrItem(names);
+};
+
+const getReactions = () => {
+  return getRandomArrItem(reactions);
 };
 
 // Export the functions for use in seed.js
-module.exports = { getRandomName, getRandomThoughts, getFriend };
+module.exports = { getRandomName, getRandomThoughts, getFriends, getReactions };
