@@ -40,14 +40,13 @@ module.exports = {
       const thought = await Thought.create({
         thoughtText: req.body.thoughtText,
         username: req.body.username,
-
       });
-// create a thought._id
+      // create a thought._id
       const user = await User.findOneAndUpdate(
-        {_id: req.body._id,},
-        { $push: {thoughts:thought._id}},
+        { _id: req.body._id },
+        { $push: { thoughts: thought._id } },
         { new: true }
-      )
+      );
       res.status(200).json(thought);
     } catch {
       (err) => res.status(500).json(err);
@@ -95,20 +94,19 @@ module.exports = {
     try {
       const thought = await Thought.findOneAndUpdate(
         // find the thought by the id passed through in the params.
-        { _id: req.params.userId },
+        { _id: req.params.thoughtId },
         // replace thoughtText in the user schema with the new value from the req.body we are passing in
-        { username: req.body.thoughtText },
-        // new:true -- show the new thoughtText after completion
-        { new: true },
-        (err, result) => {
-          if (result) {
-            res.status(200).json(result);
-            console.log(`Updated: ${result}`);
-          } else {
-            console.log("Uh Oh, something went wrong");
-          }
-        }
+        { thoughtText: req.body.thoughtText }
+        // add the thought to that specific user ID.
       );
+      const user = await User.findOneAndUpdate(
+        { _id: req.body._id },
+        { $push: { thoughts: thought._id } },
+        { new: true }
+      );
+      // new:true -- show the new thoughtText after completion
+      res.status(200).json(thought);
+      console.log(`Updated: ${thought}`);
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
