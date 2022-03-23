@@ -101,7 +101,7 @@ module.exports = {
       );
       const user = await User.findOneAndUpdate(
         { _id: req.body._id },
-        { $push: { thoughts: thought._id } },
+        { $addToSet: { thoughts: thought._id } },
         { new: true }
       );
       // new:true -- show the new thoughtText after completion
@@ -123,7 +123,14 @@ module.exports = {
       const newReaction = await Thought.findOneAndUpdate(
         { _id: req.params.thoughtId },
         // we need to add the subdocument properties of thoughts, reaction. It has a reactionId, reactionBody, username, created at
-        { $addToSet: { reactionBody: req.body } },
+        {
+          $addToSet: {
+            reactions: {
+              reactionBody: req.body.reactionBody,
+              username: req.body.username,
+            },
+          },
+        },
         { runValidators: true, new: true }
       );
 
@@ -144,12 +151,12 @@ module.exports = {
   async deleteReaction(req, res) {
     try {
       console.log("You are deleting a reaction");
-      console.log(req.body, req.params.thoughtId);
+      console.log( req.params.thoughtId, req.params.reactionId,);
 
       const deleteReaction = await Thought.findOneAndUpdate(
-        { _id: req.params.ThoughtId },
-        // might be wrong, not sure how to pull in the reaction ID here.
-        { $pull: { reactions: { reactionId: req.body.reactions.reactionId } } },
+        { _id: req.params.thoughtId },
+
+        { $pull: { reactions: { reactionId: req.params.reactionId } } },
         { runValidators: true, new: true }
       );
 

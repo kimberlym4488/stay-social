@@ -21,7 +21,6 @@ module.exports = {
   // Get all users
   // referenced in class code for sending data back in res.
   async getUsers(req, res) {
-
     try {
       const users = await User.find({})
         .select("-__v")
@@ -41,7 +40,6 @@ module.exports = {
     try {
       const user = await User.findOne({ _id: req.params.userId })
         .select("-__v")
-        // .populate(["thoughts", "friends"]);
         .populate("thoughts")
         .populate("friends");
       if (!user) {
@@ -71,7 +69,7 @@ module.exports = {
     }
   },
 
-  // Delete a user and remove their thoughts
+  // Delete a user and delete their thoughts, remove them from their friends lists, and delete theirreactions
   async deleteUser(req, res) {
     // Delete user from DB
     try {
@@ -99,39 +97,33 @@ module.exports = {
     }
   },
 
-  // Update a user by its _id;
+  // Update a user by its _id; can update username or email or both.
   async updateUser(req, res) {
     try {
       const user = await User.findOneAndUpdate(
         // find the user by the id passed through in the params.
         { _id: req.params.userId },
-        // replace username or email in the user schema with the new value from the req.body we are passing in
 
-        [{ username: req.body.username }, { email: req.body.email }],
-        { new: true },
-        (err, result) => {
-          if (result) {
-            res.status(200).json(result);
-            console.log(`Updated: ${result}`);
-          } else {
-            console.log("Uh Oh, something went wrong");
-          }
-        }
+        // replace username or email in the user schema with the new value from the req.body we are passing in
+        { $set: { username: req.body.username, email: req.body.email } },
+        { new: true }
       );
+      console.log(user);
+      res.status(200).json(user);
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
     }
   },
   // Add a friend to a user.
-  // Probably wrong, let's troublshoot
+
   async addFriend(req, res) {
     try {
       console.log("You are adding a friend");
-      console.log(req.body, req.params.userId);
+      console.log(req.params);
       const newFriend = await User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $addToSet: { friendId: req.params.friendId } },
+        { $addToSet: { friends: req.params.friendId } },
         { runValidators: true, new: true }
       );
 
@@ -140,6 +132,7 @@ module.exports = {
           .status(404)
           .json({ message: "No friend or user found with that ID :(" });
       }
+      console.log(newFriend);
       res.json(newFriend);
     } catch (err) {
       console.log(err);
@@ -151,11 +144,11 @@ module.exports = {
   async deleteFriend(req, res) {
     try {
       console.log("You are deleting a friend");
-      console.log(req.body, req.params.userId);
+      console.log(req.params.userId);
 
       const deleteFriend = await User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $pull: { friend: { friendId: req.params.friendId } } },
+        { $pull: { friends:  req.params.friendId } },
         { runValidators: true, new: true }
       );
 

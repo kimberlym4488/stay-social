@@ -17,11 +17,6 @@ connection.once("open", async () => {
   // Add users to the collection and await the results
   await User.insertMany(users);
 
-  // Add thoughts to the collection and await the results
-  // await Thought.insertMany(thoughts);
-
-  // Log out the seed data to indicate what should appear in the database
-  // await User.collection.findOneAndUpdate({ id: users[0]._id });
   console.log("Users seeded")
   process.exit(0);
 });
