@@ -21,10 +21,14 @@ module.exports = {
   // Get all users
   // referenced in class code for sending data back in res.
   async getUsers(req, res) {
+
     try {
-      const users = await User.find();
+      const users = await User.find({})
+        .select("-__v")
+        .populate("thoughts")
+        .populate("friends");
+
       return res.status(200).json(users);
-      console.log(users);
     } catch (err) {
       console.log(err);
       return res.status(500).json(err);
@@ -36,13 +40,13 @@ module.exports = {
   async getSingleUser(req, res) {
     try {
       const user = await User.findOne({ _id: req.params.userId })
-        // .populate([
-        //   { path: "thought", select: "-__v" },
-        //   { path: "friends", select: "-__v" },
-        // ])
-        .select("-__v");
+        .select("-__v")
+        // .populate(["thoughts", "friends"]);
+        .populate("thoughts")
+        .populate("friends");
       if (!user) {
         res.status(404).json({ message: "No user with that ID" });
+
         return;
       } else {
         res.json({
@@ -60,12 +64,13 @@ module.exports = {
   async createUser(req, res) {
     try {
       const user = await User.create(req.body);
-      const newUser = user.toJSON();
-      res.status(200).json(newUser);
+
+      res.status(200).json(user);
     } catch {
       (err) => res.status(500).json(err);
     }
   },
+
   // Delete a user and remove their thoughts
   async deleteUser(req, res) {
     // Delete user from DB
@@ -86,7 +91,6 @@ module.exports = {
         Thought.deleteMany({
           username: user.username,
         });
-
         res.json({ message: "User and thoughts and friends deleted!" });
       }
     } catch (err) {

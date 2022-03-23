@@ -40,11 +40,15 @@ module.exports = {
       const thought = await Thought.create({
         thoughtText: req.body.thoughtText,
         username: req.body.username,
-        userId: req.body.userId,
+
       });
-      console.log(thought);
-      const newThought = thought.toJSON();
-      res.status(200).json(newThought);
+// create a thought._id
+      const user = await User.findOneAndUpdate(
+        {_id: req.body._id,},
+        { $push: {thoughts:thought._id}},
+        { new: true }
+      )
+      res.status(200).json(thought);
     } catch {
       (err) => res.status(500).json(err);
     }
@@ -93,7 +97,6 @@ module.exports = {
         // find the thought by the id passed through in the params.
         { _id: req.params.userId },
         // replace thoughtText in the user schema with the new value from the req.body we are passing in
-
         { username: req.body.thoughtText },
         // new:true -- show the new thoughtText after completion
         { new: true },

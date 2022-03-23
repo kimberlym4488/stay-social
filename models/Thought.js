@@ -10,27 +10,25 @@ const thoughtSchema = new Schema(
       maxlength: 280,
       minlength: 1,
     },
-      // do I want username referencing the User.js model or just a string?
-      username: {
-        type: String,
-        required: true,
-      },
-  
+    // do I want username referencing the User.js model or just a string?
+    username: {
+      type: String,
+      required: true,
+    },
+
     createdAt: {
       type: Date,
       default: Date.now,
       get: (timestamp) => formatDate(timestamp),
     },
-  
+
     reactions: [reactionSchema],
   },
-
   {
     toJSON: {
       virtuals: true,
       getters: true,
     },
-    id: false,
   }
 );
 
@@ -51,6 +49,6 @@ function formatDate(timestamp) {
 }
 
 // export the data from this model into a variable, Thought. Import into models -> index.js
-const Thought = model("thought", thoughtSchema);
+const Thought = model("Thought", thoughtSchema);
 
 module.exports = Thought;
