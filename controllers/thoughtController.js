@@ -114,7 +114,6 @@ module.exports = {
   },
 
   // Add a reaction to a thought
-  // Probably wrong, let's troublshoot
   // /api/thoughts/:thoughtId/reactions
   async addReaction(req, res) {
     try {
